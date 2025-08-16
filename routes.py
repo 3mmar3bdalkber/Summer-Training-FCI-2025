@@ -1,12 +1,19 @@
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from app import app
-from models import db, Product, User, Order, OrderItem, Cart, CartItem
+from werkzeug.security import generate_password_hash
+from app import app, User
+from database import (
+    get_all_products, get_featured_products, get_product_by_id, search_products,
+    get_products_by_category, get_categories, get_related_products,
+    create_user, get_user_by_username, get_user_by_email,
+    add_to_cart, get_cart_items, get_cart_count, get_cart_total,
+    update_cart_item, remove_cart_item, clear_cart
+)
 
 @app.route('/')
 def index():
     """Homepage with hero section and featured products"""
-    featured_products = Product.query.filter_by(featured=True).limit(6).all()
+    featured_products = get_featured_products()
     return render_template('index.html', featured_products=featured_products)
 
 @app.route('/products')
@@ -15,26 +22,17 @@ def products():
     category = request.args.get('category', '')
     search = request.args.get('search', '')
     
-    # Start with all products
-    query = Product.query
+    # Get products based on filters
+    if search and category:
+        filtered_products = search_products(search, category)
+    elif search:
+        filtered_products = search_products(search)
+    elif category:
+        filtered_products = get_products_by_category(category)
+    else:
+        filtered_products = get_all_products()
     
-    # Filter by category if specified
-    if category:
-        query = query.filter(Product.category == category)
-    
-    # Filter by search term if specified
-    if search:
-        search_filter = f"%{search}%"
-        query = query.filter(
-            db.or_(
-                Product.name.ilike(search_filter),
-                Product.description.ilike(search_filter)
-            )
-        )
-    
-    filtered_products = query.all()
-    categories = db.session.query(Product.category).distinct().all()
-    categories = [cat[0] for cat in categories]
+    categories = get_categories()
     
     return render_template('products.html', 
                          products=filtered_products, 
@@ -45,13 +43,13 @@ def products():
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     """Individual product detail page"""
-    product = Product.query.get_or_404(product_id)
+    product = get_product_by_id(product_id)
+    if not product:
+        flash('المنتج غير موجود', 'error')
+        return redirect(url_for('products'))
     
     # Get related products from same category
-    related_products = Product.query.filter(
-        Product.category == product.category,
-        Product.id != product_id
-    ).limit(4).all()
+    related_products = get_related_products(product_id, product['category'])
     
     return render_template('product_detail.html', 
                          product=product, 
@@ -76,21 +74,13 @@ def search():
     if not query:
         return redirect(url_for('products'))
     
-    # Search in products using database
-    search_filter = f"%{query}%"
-    results_query = Product.query.filter(
-        db.or_(
-            Product.name.ilike(search_filter),
-            Product.description.ilike(search_filter)
-        )
-    )
-    
+    # Search in products
     if category:
-        results_query = results_query.filter(Product.category == category)
+        results = search_products(query, category)
+    else:
+        results = search_products(query)
     
-    results = results_query.all()
-    categories = db.session.query(Product.category).distinct().all()
-    categories = [cat[0] for cat in categories]
+    categories = get_categories()
     
     return render_template('search_results.html', 
                          results=results, 
@@ -109,15 +99,17 @@ def login():
         password = request.form['password']
         remember = 'remember' in request.form
         
-        user = User.query.filter_by(username=username).first()
+        user_data = get_user_by_username(username)
         
-        if user and user.check_password(password):
-            login_user(user, remember=remember)
-            next_page = request.args.get('next')
-            flash(f'مرحباً بك {user.first_name or user.username}!', 'success')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
-        else:
-            flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'error')
+        if user_data:
+            user = User(user_data)
+            if user.check_password(password):
+                login_user(user, remember=remember)
+                next_page = request.args.get('next')
+                flash(f'مرحباً بك {user.first_name or user.username}!', 'success')
+                return redirect(next_page) if next_page else redirect(url_for('index'))
+        
+        flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'error')
     
     return render_template('login.html')
 
@@ -146,29 +138,23 @@ def register():
             return render_template('register.html')
         
         # Check if user exists
-        if User.query.filter_by(username=username).first():
+        if get_user_by_username(username):
             flash('اسم المستخدم موجود بالفعل', 'error')
             return render_template('register.html')
         
-        if User.query.filter_by(email=email).first():
+        if get_user_by_email(email):
             flash('البريد الإلكتروني مستخدم بالفعل', 'error')
             return render_template('register.html')
         
         # Create new user
-        user = User(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone
-        )
-        user.set_password(password)
+        password_hash = generate_password_hash(password)
+        user_id = create_user(username, email, password_hash, first_name, last_name, phone)
         
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول', 'success')
-        return redirect(url_for('login'))
+        if user_id:
+            flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('حدث خطأ في إنشاء الحساب', 'error')
     
     return render_template('register.html')
 
@@ -184,134 +170,106 @@ def logout():
 @login_required
 def profile():
     """User profile page"""
-    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    orders = []  # Simplified - no orders system
     return render_template('profile.html', orders=orders)
 
 @app.route('/cart')
 def cart():
     """Shopping cart page"""
-    cart = None
+    cart_items = []
+    cart_total = 0
+    cart_count = 0
+    
     if current_user.is_authenticated:
-        cart = Cart.query.filter_by(user_id=current_user.id).first()
-    return render_template('cart.html', cart=cart)
+        cart_items = get_cart_items(int(current_user.id))
+        cart_total = get_cart_total(int(current_user.id))
+        cart_count = get_cart_count(int(current_user.id))
+    
+    cart_data = {
+        'items': cart_items,
+        'total_price': cart_total,
+        'total_items': cart_count
+    }
+    
+    return render_template('cart.html', cart=cart_data)
 
 @app.route('/cart/add', methods=['POST'])
 @login_required
-def add_to_cart():
+def add_to_cart_route():
     """Add product to cart"""
     try:
         data = request.get_json()
         product_id = data.get('product_id')
         quantity = data.get('quantity', 1)
         
-        product = Product.query.get_or_404(product_id)
+        product = get_product_by_id(product_id)
+        if not product:
+            return jsonify({'success': False, 'message': 'المنتج غير موجود'})
         
-        if not product.in_stock:
+        if not product['in_stock']:
             return jsonify({'success': False, 'message': 'المنتج غير متوفر'})
         
-        # Get or create cart
-        cart = Cart.query.filter_by(user_id=current_user.id).first()
-        if not cart:
-            cart = Cart(user_id=current_user.id)
-            db.session.add(cart)
-            db.session.flush()  # To get cart.id
-        
-        # Check if item already in cart
-        cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
-        
-        if cart_item:
-            cart_item.quantity += quantity
-        else:
-            cart_item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
-            db.session.add(cart_item)
-        
-        db.session.commit()
+        add_to_cart(int(current_user.id), product_id, quantity)
+        cart_count = get_cart_count(int(current_user.id))
         
         return jsonify({
             'success': True, 
             'message': 'تم إضافة المنتج للسلة',
-            'cart_count': cart.total_items
+            'cart_count': cart_count
         })
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'message': 'حدث خطأ في إضافة المنتج'})
 
 @app.route('/cart/update', methods=['POST'])
 @login_required
-def update_cart():
+def update_cart_route():
     """Update cart item quantity"""
     try:
         data = request.get_json()
         item_id = data.get('item_id')
         quantity = data.get('quantity')
         
-        cart_item = CartItem.query.get_or_404(item_id)
-        
-        # Verify the item belongs to current user's cart
-        if cart_item.cart.user_id != current_user.id:
-            return jsonify({'success': False, 'message': 'غير مسموح'})
-        
-        if quantity <= 0:
-            db.session.delete(cart_item)
-        else:
-            cart_item.quantity = quantity
-        
-        db.session.commit()
+        update_cart_item(item_id, quantity, int(current_user.id))
         
         return jsonify({'success': True, 'message': 'تم تحديث الكمية'})
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'message': 'حدث خطأ في التحديث'})
 
 @app.route('/cart/remove', methods=['POST'])
 @login_required
-def remove_from_cart():
+def remove_from_cart_route():
     """Remove item from cart"""
     try:
         data = request.get_json()
         item_id = data.get('item_id')
         
-        cart_item = CartItem.query.get_or_404(item_id)
-        
-        # Verify the item belongs to current user's cart
-        if cart_item.cart.user_id != current_user.id:
-            return jsonify({'success': False, 'message': 'غير مسموح'})
-        
-        db.session.delete(cart_item)
-        db.session.commit()
+        remove_cart_item(item_id, int(current_user.id))
         
         return jsonify({'success': True, 'message': 'تم حذف المنتج'})
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'message': 'حدث خطأ في الحذف'})
 
 @app.route('/cart/clear', methods=['POST'])
 @login_required
-def clear_cart():
+def clear_cart_route():
     """Clear all items from cart"""
     try:
-        cart = Cart.query.filter_by(user_id=current_user.id).first()
-        if cart:
-            CartItem.query.filter_by(cart_id=cart.id).delete()
-            db.session.commit()
+        clear_cart(int(current_user.id))
         
         return jsonify({'success': True, 'message': 'تم إفراغ السلة'})
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'message': 'حدث خطأ في إفراغ السلة'})
 
 @app.route('/cart/count')
-def cart_count():
+def cart_count_route():
     """Get cart items count"""
     count = 0
     if current_user.is_authenticated:
-        cart = Cart.query.filter_by(user_id=current_user.id).first()
-        if cart:
-            count = cart.total_items
+        count = get_cart_count(int(current_user.id))
     return jsonify({'count': count})
 
 @app.errorhandler(404)

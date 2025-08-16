@@ -12,7 +12,7 @@
                         <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>سلة التسوق</h5>
                     </div>
                     <div class="card-body">
-                        {% if cart and cart.items %}
+                        {% if cart and cart['items'] %}
                         <div class="table-responsive">
                             <table class="table table-borderless">
                                 <thead>
@@ -25,20 +25,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for item in cart.items %}
+                                    {% for item in cart['items'] %}
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" 
+                                                <img src="{{ item.image_url }}" alt="{{ item.name }}" 
                                                      class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
                                                 <div>
-                                                    <h6 class="mb-1">{{ item.product.name }}</h6>
-                                                    <small class="text-muted">{{ item.product.category }}</small>
+                                                    <h6 class="mb-1">{{ item.name }}</h6>
+                                                    <small class="text-muted">{{ item.category }}</small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="align-middle">
-                                            <span class="text-orange fw-bold">{{ item.product.price }} ج.م</span>
+                                            <span class="text-orange fw-bold">{{ item.price }} ج.م</span>
                                         </td>
                                         <td class="align-middle">
                                             <div class="input-group" style="width: 120px;">
@@ -90,7 +90,7 @@
                 </div>
             </div>
             
-            {% if cart and cart.items %}
+            {% if cart and cart['items'] %}
             <div class="col-lg-4">
                 <div class="card">
                     <div class="card-header bg-orange text-light">
@@ -99,11 +99,11 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-3">
                             <span>عدد المنتجات:</span>
-                            <span>{{ cart.total_items }}</span>
+                            <span>{{ cart['total_items'] }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span>المجموع الفرعي:</span>
-                            <span>{{ cart.total_price }} ج.م</span>
+                            <span>{{ cart['total_price'] }} ج.م</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span>رسوم التوصيل:</span>
@@ -112,7 +112,7 @@
                         <hr>
                         <div class="d-flex justify-content-between mb-4">
                             <span class="fw-bold">الإجمالي:</span>
-                            <span class="fw-bold text-orange fs-5">{{ cart.total_price }} ج.م</span>
+                            <span class="fw-bold text-orange fs-5">{{ cart['total_price'] }} ج.م</span>
                         </div>
                         
                         {% if current_user.is_authenticated %}
