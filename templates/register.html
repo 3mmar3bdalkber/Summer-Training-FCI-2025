@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}إنشاء حساب - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-orange text-light text-center">
+                        <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>إنشاء حساب جديد</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="first_name" class="form-label">الاسم الأول</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="last_name" class="form-label">الاسم الأخير</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">اسم المستخدم *</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">يجب أن يكون فريداً ولا يحتوي على مسافات</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">البريد الإلكتروني *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label">كلمة المرور *</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <div class="form-text">يجب أن تكون 6 أحرف على الأقل</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="confirm_password" class="form-label">تأكيد كلمة المرور *</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    أوافق على <a href="#" class="text-orange">الشروط والأحكام</a> *
+                                </label>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-orange">
+                                    <i class="fas fa-user-plus me-2"></i>إنشاء الحساب
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="mb-0">لديك حساب بالفعل؟ 
+                                <a href="{{ url_for('login') }}" class="text-orange">سجل دخولك</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        showNotification('كلمات المرور غير متطابقة', 'error');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        e.preventDefault();
+        showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+        return false;
+    }
+});
+</script>
+{% endblock %}
