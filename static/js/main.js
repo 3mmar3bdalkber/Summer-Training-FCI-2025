@@ -179,42 +179,53 @@ function initializeSearch() {
     }
 }
 
-// Shopping Cart Functions (Placeholder)
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
+// Shopping Cart Functions
 function addToCart(productId, quantity = 1) {
-    const existingItem = cart.find(item => item.id === productId);
-    
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        cart.push({
-            id: productId,
-            quantity: quantity,
-            addedAt: new Date().toISOString()
-        });
-    }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartDisplay();
-    showNotification('تم إضافة المنتج للسلة', 'success');
-}
-
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartDisplay();
-    showNotification('تم حذف المنتج من السلة', 'info');
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            updateCartDisplay();
+        } else {
+            showNotification(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(error => {
+        // Check if user is not logged in
+        if (error.status === 401) {
+            showNotification('يجب تسجيل الدخول أولاً', 'info');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showNotification('حدث خطأ في الاتصال', 'error');
+        }
+    });
 }
 
 function updateCartDisplay() {
-    const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-    const cartBadge = document.querySelector('.cart-badge');
-    
-    if (cartBadge) {
-        cartBadge.textContent = cartCount;
-        cartBadge.style.display = cartCount > 0 ? 'inline' : 'none';
-    }
+    fetch('/cart/count')
+    .then(response => response.json())
+    .then(data => {
+        const cartBadge = document.getElementById('cartBadge');
+        if (cartBadge) {
+            cartBadge.textContent = data.count;
+            cartBadge.style.display = data.count > 0 ? 'inline' : 'none';
+        }
+    })
+    .catch(error => {
+        console.log('خطأ في تحديث عداد السلة');
+    });
 }
 
 // Notification System

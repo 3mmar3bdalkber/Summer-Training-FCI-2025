@@ -1,7 +1,7 @@
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app
-from models import db, Product, User, Order, OrderItem
+from models import db, Product, User, Order, OrderItem, Cart, CartItem
 
 @app.route('/')
 def index():
@@ -186,6 +186,133 @@ def profile():
     """User profile page"""
     orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
     return render_template('profile.html', orders=orders)
+
+@app.route('/cart')
+def cart():
+    """Shopping cart page"""
+    cart = None
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    return render_template('cart.html', cart=cart)
+
+@app.route('/cart/add', methods=['POST'])
+@login_required
+def add_to_cart():
+    """Add product to cart"""
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+        quantity = data.get('quantity', 1)
+        
+        product = Product.query.get_or_404(product_id)
+        
+        if not product.in_stock:
+            return jsonify({'success': False, 'message': 'المنتج غير متوفر'})
+        
+        # Get or create cart
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if not cart:
+            cart = Cart(user_id=current_user.id)
+            db.session.add(cart)
+            db.session.flush()  # To get cart.id
+        
+        # Check if item already in cart
+        cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+        
+        if cart_item:
+            cart_item.quantity += quantity
+        else:
+            cart_item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
+            db.session.add(cart_item)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'تم إضافة المنتج للسلة',
+            'cart_count': cart.total_items
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'حدث خطأ في إضافة المنتج'})
+
+@app.route('/cart/update', methods=['POST'])
+@login_required
+def update_cart():
+    """Update cart item quantity"""
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        quantity = data.get('quantity')
+        
+        cart_item = CartItem.query.get_or_404(item_id)
+        
+        # Verify the item belongs to current user's cart
+        if cart_item.cart.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'غير مسموح'})
+        
+        if quantity <= 0:
+            db.session.delete(cart_item)
+        else:
+            cart_item.quantity = quantity
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'تم تحديث الكمية'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'حدث خطأ في التحديث'})
+
+@app.route('/cart/remove', methods=['POST'])
+@login_required
+def remove_from_cart():
+    """Remove item from cart"""
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        
+        cart_item = CartItem.query.get_or_404(item_id)
+        
+        # Verify the item belongs to current user's cart
+        if cart_item.cart.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'غير مسموح'})
+        
+        db.session.delete(cart_item)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'تم حذف المنتج'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'حدث خطأ في الحذف'})
+
+@app.route('/cart/clear', methods=['POST'])
+@login_required
+def clear_cart():
+    """Clear all items from cart"""
+    try:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if cart:
+            CartItem.query.filter_by(cart_id=cart.id).delete()
+            db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'تم إفراغ السلة'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'حدث خطأ في إفراغ السلة'})
+
+@app.route('/cart/count')
+def cart_count():
+    """Get cart items count"""
+    count = 0
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+        if cart:
+            count = cart.total_items
+    return jsonify({'count': count})
 
 @app.errorhandler(404)
 def page_not_found(e):

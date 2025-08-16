@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}السلة - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-dark text-light">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>سلة التسوق</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cart and cart.items %}
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <thead>
+                                    <tr>
+                                        <th>المنتج</th>
+                                        <th>السعر</th>
+                                        <th>الكمية</th>
+                                        <th>الإجمالي</th>
+                                        <th>إزالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" 
+                                                     class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                                    <small class="text-muted">{{ item.product.category }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="text-orange fw-bold">{{ item.product.price }} ج.م</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="input-group" style="width: 120px;">
+                                                <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity - 1 }})">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
+                                                <button class="btn btn-outline-secondary btn-sm" type="button" 
+                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity + 1 }})">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="fw-bold">{{ item.total_price }} ج.م</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="removeFromCart({{ item.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-right me-2"></i>متابعة التسوق
+                            </a>
+                            <button class="btn btn-outline-danger" onclick="clearCart()">
+                                <i class="fas fa-trash me-2"></i>إفراغ السلة
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+                            <h5>السلة فارغة</h5>
+                            <p class="text-muted">لم تقم بإضافة أي منتجات للسلة بعد</p>
+                            <a href="{{ url_for('products') }}" class="btn btn-orange">
+                                <i class="fas fa-shopping-bag me-2"></i>تسوق الآن
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if cart and cart.items %}
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-orange text-light">
+                        <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>ملخص الطلب</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>عدد المنتجات:</span>
+                            <span>{{ cart.total_items }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>المجموع الفرعي:</span>
+                            <span>{{ cart.total_price }} ج.م</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>رسوم التوصيل:</span>
+                            <span class="text-success">مجاني</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fw-bold">الإجمالي:</span>
+                            <span class="fw-bold text-orange fs-5">{{ cart.total_price }} ج.م</span>
+                        </div>
+                        
+                        {% if current_user.is_authenticated %}
+                        <div class="d-grid">
+                            <button class="btn btn-orange btn-lg" onclick="checkout()">
+                                <i class="fas fa-credit-card me-2"></i>إتمام الشراء
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            يجب تسجيل الدخول لإتمام الشراء
+                        </div>
+                        <div class="d-grid">
+                            <a href="{{ url_for('login') }}" class="btn btn-orange">
+                                <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Promo Code -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6><i class="fas fa-tag me-2"></i>كود الخصم</h6>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="أدخل كود الخصم">
+                            <button class="btn btn-outline-orange" type="button" onclick="showNotification('كود الخصم غير صالح', 'error')">
+                                تطبيق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateQuantity(itemId, newQuantity) {
+    if (newQuantity <= 0) {
+        removeFromCart(itemId);
+        return;
+    }
+    
+    fetch('/cart/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            quantity: newQuantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            showNotification(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('حدث خطأ في الاتصال', 'error');
+    });
+}
+
+function removeFromCart(itemId) {
+    if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
+        fetch('/cart/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item_id: itemId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+                showNotification('تم حذف المنتج من السلة', 'info');
+            } else {
+                showNotification(data.message || 'حدث خطأ', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('حدث خطأ في الاتصال', 'error');
+        });
+    }
+}
+
+function clearCart() {
+    if (confirm('هل أنت متأكد من إفراغ السلة كاملة؟')) {
+        fetch('/cart/clear', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+                showNotification('تم إفراغ السلة', 'info');
+            } else {
+                showNotification(data.message || 'حدث خطأ', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('حدث خطأ في الاتصال', 'error');
+        });
+    }
+}
+
+function checkout() {
+    showNotification('قريباً ميزة الدفع الإلكتروني', 'info');
+}
+</script>
+{% endblock %}

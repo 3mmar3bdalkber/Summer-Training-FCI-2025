@@ -47,7 +47,11 @@
                     
                     <div class="product-actions">
                         {% if product.in_stock %}
-                        <button class="btn btn-orange btn-lg me-2" onclick="addToCart({{ product.id }})">
+                        <div class="d-flex align-items-center mb-3">
+                            <label for="quantity" class="form-label me-3">الكمية:</label>
+                            <input type="number" class="form-control" id="quantity" value="1" min="1" max="10" style="width: 80px;">
+                        </div>
+                        <button class="btn btn-orange btn-lg me-2" onclick="addToCartWithQuantity({{ product.id }})">
                             <i class="fas fa-cart-plus me-2"></i>أضف للسلة
                         </button>
                         {% endif %}
@@ -102,26 +106,53 @@
 
 {% block scripts %}
 <script>
-function addToCart(productId) {
-    // Simulate adding to cart
+function addToCartWithQuantity(productId) {
+    const quantity = parseInt(document.getElementById('quantity').value) || 1;
     const btn = event.target;
     const originalText = btn.innerHTML;
     
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإضافة...';
     btn.disabled = true;
     
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-check me-2"></i>تم الإضافة';
-        btn.classList.remove('btn-orange');
-        btn.classList.add('btn-success');
-        
-        setTimeout(() => {
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>تم الإضافة';
+            btn.classList.remove('btn-orange');
+            btn.classList.add('btn-success');
+            showNotification(data.message, 'success');
+            updateCartDisplay();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-orange');
+                btn.disabled = false;
+            }, 2000);
+        } else {
             btn.innerHTML = originalText;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-orange');
             btn.disabled = false;
+            showNotification(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showNotification('يجب تسجيل الدخول أولاً', 'info');
+        setTimeout(() => {
+            window.location.href = '/login';
         }, 2000);
-    }, 1000);
+    });
 }
 
 function addToWishlist(productId) {
@@ -134,11 +165,13 @@ function addToWishlist(productId) {
         icon.classList.add('fa-heart-broken');
         btn.classList.remove('btn-outline-secondary');
         btn.classList.add('btn-danger');
+        showNotification('تم حذف المنتج من المفضلة', 'info');
     } else {
         icon.classList.remove('fa-heart-broken');
         icon.classList.add('fa-heart');
         btn.classList.remove('btn-danger');
         btn.classList.add('btn-outline-secondary');
+        showNotification('تم إضافة المنتج للمفضلة', 'success');
     }
 }
 </script>

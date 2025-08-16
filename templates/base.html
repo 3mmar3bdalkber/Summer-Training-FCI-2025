@@ -58,10 +58,10 @@
                     </form>
                     
                     <!-- Cart and User buttons -->
-                    <button class="btn btn-outline-light me-2" onclick="showNotification('السلة فارغة حالياً', 'info')">
+                    <a href="{{ url_for('cart') }}" class="btn btn-outline-light me-2 position-relative">
                         <i class="fas fa-shopping-cart"></i>
-                        <span class="badge bg-orange cart-badge" style="display: none;">0</span>
-                    </button>
+                        <span class="badge bg-orange cart-badge" id="cartBadge" style="display: none;">0</span>
+                    </a>
                     
                     {% if current_user.is_authenticated %}
                     <div class="dropdown">

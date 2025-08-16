@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     
     # علاقات
     orders = db.relationship('Order', backref='user', lazy=True)
+    cart = db.relationship('Cart', backref='user', uselist=False, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -89,3 +90,44 @@ class OrderItem(db.Model):
     
     def __repr__(self):
         return f'<OrderItem {self.id}>'
+
+class Cart(db.Model):
+    __tablename__ = 'carts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # علاقات
+    items = db.relationship('CartItem', backref='cart', lazy=True, cascade='all, delete-orphan')
+    
+    @property
+    def total_items(self):
+        return sum(item.quantity for item in self.items)
+    
+    @property
+    def total_price(self):
+        return sum(item.quantity * item.product.price for item in self.items)
+    
+    def __repr__(self):
+        return f'<Cart {self.id}>'
+
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    cart_id = db.Column(db.Integer, db.ForeignKey('carts.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # علاقات
+    product = db.relationship('Product', backref='cart_items')
+    
+    @property
+    def total_price(self):
+        return self.quantity * self.product.price
+    
+    def __repr__(self):
+        return f'<CartItem {self.id}>'
