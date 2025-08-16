@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('products') }}">المنتجات</a></li>
+                <li class="breadcrumb-item active">{{ product.name }}</li>
+            </ol>
+        </nav>
+        
+        <!-- Product Details -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="product-image-wrapper">
+                    <img src="{{ product.image }}" class="img-fluid rounded" alt="{{ product.name }}">
+                    {% if not product.in_stock %}
+                    <div class="out-of-stock-overlay">
+                        <span class="badge bg-danger fs-6">نفد المخزون</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="product-info">
+                    <span class="badge bg-secondary mb-2">{{ product.category }}</span>
+                    <h1 class="mb-3">{{ product.name }}</h1>
+                    <p class="lead text-muted mb-4">{{ product.description }}</p>
+                    
+                    <div class="price-section mb-4">
+                        <span class="h2 text-orange">{{ product.price }} ر.س</span>
+                    </div>
+                    
+                    <div class="stock-info mb-4">
+                        {% if product.in_stock %}
+                        <span class="badge bg-success">متوفر في المخزون</span>
+                        {% else %}
+                        <span class="badge bg-danger">نفد المخزون</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="product-actions">
+                        {% if product.in_stock %}
+                        <button class="btn btn-orange btn-lg me-2" onclick="addToCart({{ product.id }})">
+                            <i class="fas fa-cart-plus me-2"></i>أضف للسلة
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary btn-lg" onclick="addToWishlist({{ product.id }})">
+                            <i class="fas fa-heart me-2"></i>أضف للمفضلة
+                        </button>
+                    </div>
+                    
+                    <div class="product-features mt-5">
+                        <h5>مميزات المنتج</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>جودة عالية</li>
+                            <li><i class="fas fa-check text-success me-2"></i>ضمان لمدة سنة</li>
+                            <li><i class="fas fa-check text-success me-2"></i>شحن مجاني</li>
+                            <li><i class="fas fa-check text-success me-2"></i>إرجاع خلال 30 يوم</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        {% if related_products %}
+        <section class="mt-5">
+            <h3 class="mb-4">منتجات مشابهة</h3>
+            <div class="row">
+                {% for product in related_products %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card product-card h-100">
+                        <div class="card-img-wrapper">
+                            <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}">
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-orange fw-bold">{{ product.price }} ر.س</span>
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                       class="btn btn-outline-orange btn-sm">عرض</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addToCart(productId) {
+    // Simulate adding to cart
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإضافة...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>تم الإضافة';
+        btn.classList.remove('btn-orange');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-orange');
+            btn.disabled = false;
+        }, 2000);
+    }, 1000);
+}
+
+function addToWishlist(productId) {
+    // Simulate adding to wishlist
+    const btn = event.target;
+    const icon = btn.querySelector('i');
+    
+    if (icon.classList.contains('fa-heart')) {
+        icon.classList.remove('fa-heart');
+        icon.classList.add('fa-heart-broken');
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-danger');
+    } else {
+        icon.classList.remove('fa-heart-broken');
+        icon.classList.add('fa-heart');
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-outline-secondary');
+    }
+}
+</script>
+{% endblock %}
