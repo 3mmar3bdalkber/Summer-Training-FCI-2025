@@ -286,15 +286,69 @@ document.addEventListener('DOMContentLoaded', function() {
 // Window scroll events
 window.addEventListener('scroll', function() {
     const navbar = document.querySelector('.navbar');
+    const backToTop = document.getElementById('backToTop');
     
     if (window.scrollY > 100) {
         navbar.classList.add('navbar-scrolled');
+        if (backToTop) backToTop.classList.add('show');
     } else {
         navbar.classList.remove('navbar-scrolled');
+        if (backToTop) backToTop.classList.remove('show');
     }
+});
+
+// Back to top function
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// Product Quick View (placeholder function)
+function quickView(productId) {
+    showNotification('معاينة سريعة قريباً', 'info');
+}
+
+// Add to Wishlist function
+function toggleWishlist(productId) {
+    let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    
+    if (wishlist.includes(productId)) {
+        wishlist = wishlist.filter(id => id !== productId);
+        showNotification('تم حذف المنتج من المفضلة', 'info');
+    } else {
+        wishlist.push(productId);
+        showNotification('تم إضافة المنتج للمفضلة', 'success');
+    }
+    
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+}
+
+// Enhanced search with autocomplete simulation
+function initializeEnhancedSearch() {
+    const searchInputs = document.querySelectorAll('input[name="q"]');
+    
+    searchInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Simulate autocomplete - in real app would fetch from server
+            if (this.value.length >= 2) {
+                // Show suggestions based on current products
+                // This is a placeholder for demonstration
+            }
+        });
+    });
+}
+
+// Initialize enhanced features
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEnhancedSearch();
 });
 
 // Export functions for global use
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.showNotification = showNotification;
+window.quickView = quickView;
+window.toggleWishlist = toggleWishlist;
+window.scrollToTop = scrollToTop;

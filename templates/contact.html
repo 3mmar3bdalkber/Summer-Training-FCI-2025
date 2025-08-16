@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}تواصل معنا - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-light">
+                        <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>تواصل معنا</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="contactForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">الاسم *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">البريد الإلكتروني *</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">الموضوع *</label>
+                                <select class="form-control" id="subject" name="subject" required>
+                                    <option value="">اختر الموضوع</option>
+                                    <option value="support">دعم فني</option>
+                                    <option value="order">استفسار عن طلب</option>
+                                    <option value="product">استفسار عن منتج</option>
+                                    <option value="other">أخرى</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">الرسالة *</label>
+                                <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-orange">
+                                <i class="fas fa-paper-plane me-2"></i>إرسال الرسالة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-orange text-light">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات التواصل</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="contact-info">
+                            <div class="mb-3">
+                                <i class="fas fa-map-marker-alt text-orange me-2"></i>
+                                <strong>العنوان:</strong><br>
+                                <small>القاهرة، مصر</small>
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-phone text-orange me-2"></i>
+                                <strong>الهاتف:</strong><br>
+                                <small>+20 123 456 7890</small>
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-envelope text-orange me-2"></i>
+                                <strong>البريد الإلكتروني:</strong><br>
+                                <small>info@mystore.com</small>
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-clock text-orange me-2"></i>
+                                <strong>ساعات العمل:</strong><br>
+                                <small>السبت - الخميس: 9:00 ص - 6:00 م</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-orange mb-3">تابعنا على وسائل التواصل</h6>
+                        <div class="social-links">
+                            <a href="#" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                                <i class="fab fa-facebook-f"></i> فيسبوك
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-sm me-2 mb-2">
+                                <i class="fab fa-twitter"></i> تويتر
+                            </a>
+                            <a href="#" class="btn btn-outline-danger btn-sm mb-2">
+                                <i class="fab fa-instagram"></i> إنستجرام
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Simulate form submission
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...';
+    submitBtn.disabled = true;
+    
+    setTimeout(() => {
+        showNotification('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً', 'success');
+        this.reset();
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 2000);
+});
+</script>
+{% endblock %}

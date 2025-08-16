@@ -32,6 +32,9 @@
                 <div class="card product-card h-100">
                     <div class="card-img-wrapper">
                         <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}">
+                        <button class="btn btn-sm btn-light quick-view-btn" onclick="quickView({{ product.id }})">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         {% if not product.in_stock %}
                         <div class="out-of-stock-overlay">
                             <span class="badge bg-danger">نفد المخزون</span>
@@ -42,8 +45,13 @@
                         <h5 class="card-title">{{ product.name }}</h5>
                         <p class="card-text text-muted">{{ product.description }}</p>
                         <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="h5 text-orange mb-0">{{ product.price }} ج.م</span>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="toggleWishlist({{ product.id }})">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="d-grid">
                                 <a href="{{ url_for('product_detail', product_id=product.id) }}" 
                                    class="btn btn-outline-orange btn-sm">عرض التفاصيل</a>
                             </div>

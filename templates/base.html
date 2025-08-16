@@ -45,14 +45,24 @@
                     </li>
                 </ul>
                 
-                <div class="d-flex">
-                    <button class="btn btn-outline-light me-2">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    <button class="btn btn-outline-light me-2">
+                <div class="d-flex align-items-center">
+                    <!-- Search Form -->
+                    <form class="d-flex me-3" method="GET" action="{{ url_for('search') }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm" name="q" 
+                                   placeholder="ابحث عن منتج..." style="width: 200px;">
+                            <button class="btn btn-outline-light btn-sm" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Cart and User buttons -->
+                    <button class="btn btn-outline-light me-2" onclick="showNotification('السلة فارغة حالياً', 'info')">
                         <i class="fas fa-shopping-cart"></i>
+                        <span class="badge bg-orange cart-badge" style="display: none;">0</span>
                     </button>
-                    <button class="btn btn-outline-light">
+                    <button class="btn btn-outline-light" onclick="showNotification('قريباً ميزة تسجيل الدخول', 'info')">
                         <i class="fas fa-user"></i>
                     </button>
                 </div>
@@ -78,33 +88,80 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Newsletter Section -->
+    <section class="bg-orange text-light py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-1">اشترك في النشرة الإخبارية</h5>
+                    <p class="mb-0">احصل على أحدث العروض والمنتجات الجديدة</p>
+                </div>
+                <div class="col-md-6">
+                    <form class="d-flex" id="newsletterForm">
+                        <input type="email" class="form-control me-2" placeholder="بريدك الإلكتروني..." required>
+                        <button type="submit" class="btn btn-light">اشتراك</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+    <footer class="bg-dark text-light py-4">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h5 class="text-orange">متجري الإلكتروني</h5>
                     <p>اكتشف مجموعة واسعة من المنتجات عالية الجودة بأفضل الأسعار</p>
                 </div>
-                <div class="col-md-6 text-end">
+                <div class="col-md-4">
+                    <h6>روابط سريعة</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-light">الرئيسية</a></li>
+                        <li><a href="{{ url_for('products') }}" class="text-light">المنتجات</a></li>
+                        <li><a href="{{ url_for('about') }}" class="text-light">من نحن</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="text-light">تواصل معنا</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
                     <h6>تابعنا</h6>
-                    <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                    <div class="mb-3">
+                        <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                    <p><i class="fas fa-phone me-2"></i>+20 123 456 7890</p>
+                    <p><i class="fas fa-envelope me-2"></i>info@mystore.com</p>
                 </div>
             </div>
             <hr class="my-3">
             <div class="text-center">
-                <small>&copy; 2024 متجري الإلكتروني. جميع الحقوق محفوظة.</small>
+                <small>&copy; 2025 متجري الإلكتروني. جميع الحقوق محفوظة.</small>
             </div>
         </div>
     </footer>
+
+    <!-- Back to Top Button -->
+    <button class="btn btn-orange back-to-top" id="backToTop" onclick="scrollToTop()">
+        <i class="fas fa-chevron-up"></i>
+    </button>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Newsletter Script -->
+    <script>
+    document.getElementById('newsletterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = this.querySelector('input[type="email"]').value;
+        showNotification('تم اشتراكك بنجاح! شكراً لك', 'success');
+        this.reset();
+    });
+    </script>
     
     {% block scripts %}{% endblock %}
 </body>

@@ -51,12 +51,37 @@ def product_detail(product_id):
 @app.route('/about')
 def about():
     """About us page"""
-    return render_template('index.html', page_title='من نحن')
+    return render_template('about.html')
 
 @app.route('/contact')
 def contact():
     """Contact us page"""
-    return render_template('index.html', page_title='تواصل معنا')
+    return render_template('contact.html')
+
+@app.route('/search')
+def search():
+    """Enhanced search page"""
+    query = request.args.get('q', '')
+    category = request.args.get('category', '')
+    
+    if not query:
+        return redirect(url_for('products'))
+    
+    # Search in products
+    results = []
+    for product in products_data.values():
+        if (query.lower() in product['name'].lower() or 
+            query.lower() in product['description'].lower()):
+            if not category or product['category'] == category:
+                results.append(product)
+    
+    categories = list(set(p['category'] for p in products_data.values()))
+    
+    return render_template('search_results.html', 
+                         results=results, 
+                         query=query,
+                         categories=categories,
+                         selected_category=category)
 
 @app.errorhandler(404)
 def page_not_found(e):
