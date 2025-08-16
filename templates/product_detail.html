@@ -34,7 +34,7 @@
                     <p class="lead text-muted mb-4">{{ product.description }}</p>
                     
                     <div class="price-section mb-4">
-                        <span class="h2 text-orange">{{ product.price }} ر.س</span>
+                        <span class="h2 text-orange">{{ product.price }} ج.م</span>
                     </div>
                     
                     <div class="stock-info mb-4">
@@ -84,7 +84,7 @@
                             <h6 class="card-title">{{ product.name }}</h6>
                             <div class="mt-auto">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-orange fw-bold">{{ product.price }} ر.س</span>
+                                    <span class="text-orange fw-bold">{{ product.price }} ج.م</span>
                                     <a href="{{ url_for('product_detail', product_id=product.id) }}" 
                                        class="btn btn-outline-orange btn-sm">عرض</a>
                                 </div>
