@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}السلة - متجري الإلكتروني{% endblock %}
+{% block title %}السلة - سوق دماريس{% endblock %}
 
 {% block content %}
 <section class="py-5">
@@ -29,8 +29,9 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ item.image_url }}" alt="{{ item.name }}" 
-                                                     class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                                <img src="{{ url_for('static', filename=item.image_url if item.image_url else 'images/placeholder.jpg') }}"
+                                                    alt="{{ item.name }}" class="img-thumbnail me-3"
+                                                    style="width: 80px; height: 80px; object-fit: cover;">
                                                 <div>
                                                     <h6 class="mb-1">{{ item.name }}</h6>
                                                     <small class="text-muted">{{ item.category }}</small>
@@ -42,13 +43,14 @@
                                         </td>
                                         <td class="align-middle">
                                             <div class="input-group" style="width: 120px;">
-                                                <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity - 1 }})">
+                                                <button class="btn btn-outline-secondary btn-sm" type="button"
+                                                    onclick="updateQuantity({{ item.id }}, {{ item.quantity - 1 }})">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
-                                                <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
-                                                <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                                        onclick="updateQuantity({{ item.id }}, {{ item.quantity + 1 }})">
+                                                <input type="text" class="form-control text-center"
+                                                    value="{{ item.quantity }}" readonly>
+                                                <button class="btn btn-outline-secondary btn-sm" type="button"
+                                                    onclick="updateQuantity({{ item.id }}, {{ item.quantity + 1 }})">
                                                     <i class="fas fa-plus"></i>
                                                 </button>
                                             </div>
@@ -57,8 +59,8 @@
                                             <span class="fw-bold">{{ item.total_price }} ج.م</span>
                                         </td>
                                         <td class="align-middle">
-                                            <button class="btn btn-outline-danger btn-sm" 
-                                                    onclick="removeFromCart({{ item.id }})">
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                onclick="removeFromCart({{ item.id }})">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -67,7 +69,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-right me-2"></i>متابعة التسوق
@@ -89,7 +91,7 @@
                     </div>
                 </div>
             </div>
-            
+
             {% if cart and cart['items'] %}
             <div class="col-lg-4">
                 <div class="card">
@@ -114,7 +116,7 @@
                             <span class="fw-bold">الإجمالي:</span>
                             <span class="fw-bold text-orange fs-5">{{ cart['total_price'] }} ج.م</span>
                         </div>
-                        
+
                         {% if current_user.is_authenticated %}
                         <div class="d-grid">
                             <button class="btn btn-orange btn-lg" onclick="checkout()">
@@ -134,14 +136,15 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <!-- Promo Code -->
                 <div class="card mt-3">
                     <div class="card-body">
                         <h6><i class="fas fa-tag me-2"></i>كود الخصم</h6>
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="أدخل كود الخصم">
-                            <button class="btn btn-outline-orange" type="button" onclick="showNotification('كود الخصم غير صالح', 'error')">
+                            <button class="btn btn-outline-orange" type="button"
+                                onclick="showNotification('كود الخصم غير صالح', 'error')">
                                 تطبيق
                             </button>
                         </div>
@@ -156,28 +159,116 @@
 
 {% block scripts %}
 <script>
-function updateQuantity(itemId, newQuantity) {
-    if (newQuantity <= 0) {
-        removeFromCart(itemId);
-        return;
+    function updateQuantity(itemId, newQuantity) {
+        if (newQuantity <= 0) {
+            removeFromCart(itemId);
+            return;
+        }
+
+        fetch('/cart/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item_id: itemId,
+                quantity: newQuantity
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showNotification(data.message || 'حدث خطأ', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('حدث خطأ في الاتصال', 'error');
+            });
     }
-    
-    fetch('/cart/update', {
+
+    function removeFromCart(itemId) {
+        if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
+            fetch('/cart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    item_id: itemId
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                        showNotification('تم حذف المنتج من السلة', 'info');
+                    } else {
+                        showNotification(data.message || 'حدث خطأ', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('حدث خطأ في الاتصال', 'error');
+                });
+        }
+    }
+
+    function clearCart() {
+        if (confirm('هل أنت متأكد من إفراغ السلة كاملة؟')) {
+            fetch('/cart/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                        showNotification('تم إفراغ السلة', 'info');
+                    } else {
+                        showNotification(data.message || 'حدث خطأ', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('حدث خطأ في الاتصال', 'error');
+                });
+        }
+    }
+function checkout() {
+    // عرض رسالة نجاح
+    showNotification('تم شراء المنتج بنجاح!', 'success');
+
+    // إرسال طلب لمسح السلة من السيرفر
+    fetch('/cart/clear', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            item_id: itemId,
-            quantity: newQuantity
-        })
+        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // إزالة محتويات السلة بصريًا
+            const tbody = document.querySelector('.table tbody');
+            if (tbody) tbody.innerHTML = '';
+
+            // تحديث ملخص الطلب
+            const totalItems = document.querySelector('.card-body .d-flex.justify-content-between.mb-3 span:nth-child(2)');
+            const subtotal = document.querySelector('.card-body .d-flex.justify-content-between.mb-3:nth-child(2) span:nth-child(2)');
+            const totalPrice = document.querySelector('.card-body .d-flex.justify-content-between.mb-4 span.fw-bold.text-orange');
+
+            if (totalItems) totalItems.textContent = '0';
+            if (subtotal) subtotal.textContent = '0 ج.م';
+            if (totalPrice) totalPrice.textContent = '0 ج.م';
+
+            // تحديث عداد السلة
+            const cartBadge = document.getElementById('cartBadge');
+            if (cartBadge) cartBadge.style.display = 'none';
+
         } else {
-            showNotification(data.message || 'حدث خطأ', 'error');
+            showNotification(data.message || 'حدث خطأ أثناء تفريغ السلة', 'error');
         }
     })
     .catch(error => {
@@ -185,57 +276,8 @@ function updateQuantity(itemId, newQuantity) {
     });
 }
 
-function removeFromCart(itemId) {
-    if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
-        fetch('/cart/remove', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                item_id: itemId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-                showNotification('تم حذف المنتج من السلة', 'info');
-            } else {
-                showNotification(data.message || 'حدث خطأ', 'error');
-            }
-        })
-        .catch(error => {
-            showNotification('حدث خطأ في الاتصال', 'error');
-        });
-    }
-}
 
-function clearCart() {
-    if (confirm('هل أنت متأكد من إفراغ السلة كاملة؟')) {
-        fetch('/cart/clear', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-                showNotification('تم إفراغ السلة', 'info');
-            } else {
-                showNotification(data.message || 'حدث خطأ', 'error');
-            }
-        })
-        .catch(error => {
-            showNotification('حدث خطأ في الاتصال', 'error');
-        });
-    }
-}
 
-function checkout() {
-    showNotification('قريباً ميزة الدفع الإلكتروني', 'info');
-}
+
 </script>
 {% endblock %}

@@ -1,34 +1,41 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}متجري الإلكتروني{% endblock %}</title>
-    
+    <title>{% block title %}سوق دماريس{% endblock %}</title>
+    <!-- add favicon -->
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+
     <!-- Bootstrap 5 RTL CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Google Fonts for Arabic -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+
+<body data-logged-in="{{ 'true' if current_user.is_authenticated else 'false' }}">
+
     <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container">
             <a class="navbar-brand text-orange fw-bold" href="{{ url_for('index') }}">
-                <i class="fas fa-store me-2"></i>متجري الإلكتروني
+                <i class="fas fa-store me-2"></i>سوق دماريس
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -44,25 +51,26 @@
                         <a class="nav-link" href="{{ url_for('contact') }}">تواصل معنا</a>
                     </li>
                 </ul>
-                
+
                 <div class="d-flex align-items-center">
                     <!-- Search Form -->
-                    <form class="d-flex me-3" method="GET" action="{{ url_for('search') }}">
-                        <div class="input-group">
-                            <input type="text" class="form-control form-control-sm" name="q" 
-                                   placeholder="ابحث عن منتج..." style="width: 200px;">
-                            <button class="btn btn-outline-light btn-sm" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                    
+                <!-- Replace the existing search form with this: -->
+                <form class="d-flex me-3" method="GET" action="{{ url_for('products') }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" name="search"
+                               placeholder="ابحث عن منتج..." style="width: 200px;">
+                        <button class="btn btn-outline-light btn-sm" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
                     <!-- Cart and User buttons -->
                     <a href="{{ url_for('cart') }}" class="btn btn-outline-light me-2 position-relative">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="badge bg-orange cart-badge" id="cartBadge" style="display: none;">0</span>
                     </a>
-                    
+
                     {% if current_user.is_authenticated %}
                     <div class="dropdown">
                         <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -70,12 +78,14 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('profile') }}">
-                                <i class="fas fa-user-circle me-2"></i>الملف الشخصي
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                                    <i class="fas fa-user-circle me-2"></i>الملف الشخصي
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}">
-                                <i class="fas fa-sign-out-alt me-2"></i>تسجيل خروج
-                            </a></li>
+                                    <i class="fas fa-sign-out-alt me-2"></i>تسجيل خروج
+                                </a></li>
                         </ul>
                     </div>
                     {% else %}
@@ -94,16 +104,16 @@
     <!-- Main Content -->
     <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="container mt-3">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% if messages %}
+        <div class="container mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
@@ -132,7 +142,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5 class="text-orange">متجري الإلكتروني</h5>
+                    <h5 class="text-orange">سوق دماريس</h5>
                     <p>اكتشف مجموعة واسعة من المنتجات عالية الجودة بأفضل الأسعار</p>
                 </div>
                 <div class="col-md-4">
@@ -158,7 +168,7 @@
             </div>
             <hr class="my-3">
             <div class="text-center">
-                <small>&copy; 2025 متجري الإلكتروني. جميع الحقوق محفوظة.</small>
+                <small>&copy; 2025 سوق دماريس. جميع الحقوق محفوظة.</small>
             </div>
         </div>
     </footer>
@@ -170,20 +180,21 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+
     <!-- Newsletter Script -->
     <script>
-    document.getElementById('newsletterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = this.querySelector('input[type="email"]').value;
-        showNotification('تم اشتراكك بنجاح! شكراً لك', 'success');
-        this.reset();
-    });
+        document.getElementById('newsletterForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const email = this.querySelector('input[type="email"]').value;
+            showNotification('تم اشتراكك بنجاح! شكراً لك', 'success');
+            this.reset();
+        });
     </script>
-    
+
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

@@ -4,11 +4,12 @@ from datetime import datetime
 
 DATABASE_PATH = 'store.db'
 
+
 def init_db():
     """Initialize the database with basic tables"""
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    
+
     # Products table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
@@ -24,8 +25,8 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
-    # Users table (simplified)
+
+    # Users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,12 +35,11 @@ def init_db():
             password_hash TEXT NOT NULL,
             first_name TEXT,
             last_name TEXT,
-            phone TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            phone TEXT
         )
     ''')
-    
-    # Cart items table (simple, without separate cart table)
+
+    # Cart items table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS cart_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,28 +51,191 @@ def init_db():
             FOREIGN KEY (product_id) REFERENCES products (id)
         )
     ''')
-    
+
+    # Wishlist table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS wishlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+            UNIQUE(user_id, product_id)
+        )
+    ''')
+    # Orders table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        total_price REAL NOT NULL,
+        status TEXT DEFAULT 'قيد الانتظار',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+''')
+    # Order items table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        price REAL NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    )
+''')
+
     conn.commit()
-    
+     # -------- مسح كل المنتجات القديمة --------
+    cursor.execute('DELETE FROM products')
+    conn.commit()
     # Add sample products if empty
     cursor.execute('SELECT COUNT(*) FROM products')
     if cursor.fetchone()[0] == 0:
         sample_products = [
-            ('هاتف ذكي متطور', 'هاتف ذكي بمواصفات عالية وتقنيات حديثة', 2500, 'إلكترونيات', 'https://via.placeholder.com/300x300/333333/ffffff?text=هاتف', 1, 1, 10),
-            ('لابتوب للألعاب', 'لابتوب قوي مخصص للألعاب والتصميم', 4500, 'إلكترونيات', 'https://via.placeholder.com/300x300/333333/ffffff?text=لابتوب', 1, 1, 5),
-            ('ساعة ذكية', 'ساعة ذكية لتتبع اللياقة البدنية', 800, 'إكسسوارات', 'https://via.placeholder.com/300x300/333333/ffffff?text=ساعة', 1, 1, 15),
-            ('سماعات لاسلكية', 'سماعات بلوتوث عالية الجودة', 350, 'إكسسوارات', 'https://via.placeholder.com/300x300/333333/ffffff?text=سماعات', 0, 1, 20),
-            ('كاميرا رقمية', 'كاميرا احترافية للتصوير', 3200, 'إلكترونيات', 'https://via.placeholder.com/300x300/333333/ffffff?text=كاميرا', 1, 1, 8),
-            ('جهاز لوحي', 'جهاز لوحي للعمل والترفيه', 1800, 'إلكترونيات', 'https://via.placeholder.com/300x300/333333/ffffff?text=تابلت', 1, 0, 0)
-        ]
-        
+    ('هاتف ذكي متطور', 'هاتف ذكي بمواصفات عالية وتقنيات حديثة', 2500, 'إلكترونيات',
+     'uploads/تلفون.jpg', 1, 1, 10),
+
+    ('لابتوب للألعاب', 'لابتوب قوي مخصص للألعاب والتصميم', 4500, 'إلكترونيات',
+     'uploads/لاب.avif', 1, 1, 5),
+
+    ('ساعة ذكية', 'ساعة ذكية لتتبع اللياقة البدنية', 800, 'إكسسوارات',
+     'uploads/ساعة.avif', 1, 1, 15),
+
+    ('سماعات لاسلكية', 'سماعات بلوتوث عالية الجودة', 350, 'إكسسوارات',
+     'uploads/سماعة.jpeg', 0, 1, 20),
+
+    ('كاميرا رقمية', 'كاميرا احترافية للتصوير', 3200, 'إلكترونيات',
+     'uploads/كاميرا.jpg', 1, 1, 8),
+
+    ('جهاز لوحي', 'جهاز لوحي للعمل والترفيه', 1800, 'إلكترونيات',
+     'uploads/جهاز لوخي.avif', 1, 0, 0)
+]
+
         cursor.executemany('''
             INSERT INTO products (name, description, price, category, image_url, featured, in_stock, stock_quantity)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', sample_products)
-        
+
     conn.commit()
     conn.close()
+def add_to_wishlist(user_id, product_id):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('INSERT OR IGNORE INTO wishlist (user_id, product_id) VALUES (?, ?)',
+                   (user_id, product_id))
+    conn.commit()
+    conn.close()
+
+def remove_from_wishlist(user_id, product_id):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM wishlist WHERE user_id=? AND product_id=?',
+                   (user_id, product_id))
+    conn.commit()
+    conn.close()
+
+def is_in_wishlist(user_id, product_id):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT 1 FROM wishlist WHERE user_id=? AND product_id=?',
+                   (user_id, product_id))
+    exists = cursor.fetchone() is not None
+    conn.close()
+    return exists
+
+def get_wishlist_for_user(user_id):
+    """ترجع قائمة product_id للمستخدم"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT product_id FROM wishlist WHERE user_id=?', (user_id,))
+    results = cursor.fetchall()
+    conn.close()
+    return [r[0] for r in results]
+#انشاء الطلب 
+def create_order(user_id):
+    """إنشاء طلب من محتوى السلة"""
+    conn = get_db_connection()
+    
+    # جلب عناصر السلة
+    cart_items = conn.execute('''
+        SELECT ci.product_id, ci.quantity, p.price
+        FROM cart_items ci
+        JOIN products p ON ci.product_id = p.id
+        WHERE ci.user_id = ?
+    ''', (user_id,)).fetchall()
+    
+    if not cart_items:
+        conn.close()
+        return None  # السلة فارغة
+
+    total_price = sum(item['quantity'] * item['price'] for item in cart_items)
+    
+    # إنشاء الطلب
+    cursor = conn.execute('''
+        INSERT INTO orders (user_id, total_price) VALUES (?, ?)
+    ''', (user_id, total_price))
+    
+    order_id = cursor.lastrowid
+    
+    # إضافة عناصر الطلب
+    for item in cart_items:
+        conn.execute('''
+            INSERT INTO order_items (order_id, product_id, quantity, price)
+            VALUES (?, ?, ?, ?)
+        ''', (order_id, item['product_id'], item['quantity'], item['price']))
+    
+    # مسح السلة بعد إنشاء الطلب
+    conn.execute('DELETE FROM cart_items WHERE user_id = ?', (user_id,))
+    
+    conn.commit()
+    conn.close()
+    return order_id
+
+# جلب الطلبات الخاصة بالمستخدم
+def get_orders_for_user(user_id):
+    conn = get_db_connection()
+    orders = conn.execute('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', (user_id,)).fetchall()
+
+    result = []
+    for order in orders:
+        items = conn.execute('''
+            SELECT oi.quantity, oi.price, p.name, p.image_url
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ''', (order['id'],)).fetchall()
+
+        items_list = [dict(item) for item in items]
+
+        result.append({
+            'id': order['id'],
+            'total': order['total_price'],
+            'status': order['status'],
+            'created_at': order['created_at'],
+            'items': items_list  # <--- لازم تكون قائمة من الديكشنريز
+        })
+    conn.close()
+    return result
+
+
+
+# إلغاء الطلب
+def cancel_order_by_id(user_id, order_id):
+    conn = get_db_connection()
+    # نتأكد أن الطلب يخص المستخدم وأن حالته لم يتم إلغاؤها مسبقاً
+    order = conn.execute('SELECT * FROM orders WHERE id = ? AND user_id = ?', (order_id, user_id)).fetchone()
+    if not order or order['status'] == 'تم الإلغاء':
+        conn.close()
+        return False
+    # تحديث الحالة
+    conn.execute('UPDATE orders SET status = ? WHERE id = ?', ('تم الإلغاء', order_id))
+    conn.commit()
+    conn.close()
+    return True
 
 def get_db_connection():
     """Get a database connection"""

@@ -1,13 +1,18 @@
+import sqlite3
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 from app import app, User
 from database import (
     get_all_products, get_featured_products, get_product_by_id, search_products,
     get_products_by_category, get_categories, get_related_products,
     create_user, get_user_by_username, get_user_by_email,
     add_to_cart, get_cart_items, get_cart_count, get_cart_total,
-    update_cart_item, remove_cart_item, clear_cart
+    update_cart_item, remove_cart_item, clear_cart,add_to_wishlist,create_order,
+    get_wishlist_for_user, remove_from_wishlist, is_in_wishlist, cancel_order_by_id,
+    get_orders_for_user,
+    DATABASE_PATH
 )
 
 @app.route('/')
@@ -40,20 +45,6 @@ def products():
                          current_category=category,
                          search_term=search)
 
-@app.route('/product/<int:product_id>')
-def product_detail(product_id):
-    """Individual product detail page"""
-    product = get_product_by_id(product_id)
-    if not product:
-        flash('المنتج غير موجود', 'error')
-        return redirect(url_for('products'))
-    
-    # Get related products from same category
-    related_products = get_related_products(product_id, product['category'])
-    
-    return render_template('product_detail.html', 
-                         product=product, 
-                         related_products=related_products)
 
 @app.route('/about')
 def about():
@@ -100,6 +91,8 @@ def login():
         remember = 'remember' in request.form
         
         user_data = get_user_by_username(username)
+        print(user_data)
+
         
         if user_data:
             user = User(user_data)
@@ -169,9 +162,23 @@ def logout():
 @app.route('/profile')
 @login_required
 def profile():
-    """User profile page"""
-    orders = []  # Simplified - no orders system
+    orders = get_orders_for_user(current_user.id)
     return render_template('profile.html', orders=orders)
+
+# إلغاء طلب
+@app.route('/orders/cancel', methods=['POST'])
+@login_required
+def cancel_order():
+    data = request.get_json()
+    order_id = data.get('order_id')
+    if not order_id:
+        return jsonify({'success': False, 'message': 'رقم الطلب غير موجود'})
+
+    success = cancel_order_by_id(current_user.id, order_id)
+    if success:
+        return jsonify({'success': True, 'message': 'تم إلغاء الطلب بنجاح'})
+    else:
+        return jsonify({'success': False, 'message': 'لا يمكن إلغاء الطلب'})
 
 @app.route('/cart')
 def cart():
@@ -271,6 +278,57 @@ def cart_count_route():
     if current_user.is_authenticated:
         count = get_cart_count(int(current_user.id))
     return jsonify({'count': count})
+
+@app.route('/wishlist/page')
+@login_required
+def wishlist_page():
+    user_id = current_user.id
+    wishlist_ids = get_wishlist_for_user(user_id)
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if wishlist_ids:
+        placeholders = ','.join(['?']*len(wishlist_ids))
+        cursor.execute(f"SELECT * FROM products WHERE id IN ({placeholders})", wishlist_ids)
+        products = cursor.fetchall()
+    else:
+        products = []
+
+    conn.close()
+    return render_template('wishlist_page.html', products=products)
+
+
+@app.route('/wishlist/toggle', methods=['POST'])
+@login_required
+def toggle_wishlist():
+    data = request.get_json()
+    product_id = data.get('product_id')
+    user_id = current_user.id
+
+    if is_in_wishlist(user_id, product_id):
+        remove_from_wishlist(user_id, product_id)
+        return jsonify({'success': True, 'message': 'تم حذف المنتج من المفضلة'})
+    else:
+        add_to_wishlist(user_id, product_id)
+        return jsonify({'success': True, 'message': 'تم إضافة المنتج للمفضلة'})
+
+@app.route('/wishlist')
+@login_required
+def get_wishlist():
+
+    user_id = current_user.id
+    
+    wishlist = get_wishlist_for_user(user_id)  # ترجع قائمة product_id
+    return jsonify({"success": True, "wishlist": wishlist})
+@app.route('/checkout', methods=['POST'])
+@login_required
+def checkout():
+    order_id = create_order(current_user.id)
+    if order_id:
+        return jsonify({'success': True, 'message': f'تم إنشاء الطلب بنجاح!'})
+    return jsonify({'success': False, 'message': 'السلة فارغة'})
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -322,19 +322,57 @@ function quickView(productId) {
 }
 
 // Add to Wishlist function
-function toggleWishlist(productId) {
-    let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-    
-    if (wishlist.includes(productId)) {
-        wishlist = wishlist.filter(id => id !== productId);
-        showNotification('تم حذف المنتج من المفضلة', 'info');
-    } else {
-        wishlist.push(productId);
-        showNotification('تم إضافة المنتج للمفضلة', 'success');
-    }
-    
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+// Add to Wishlist function
+function toggleWishlist(productId, el) {
+    const icon = el.querySelector('i');
+
+    fetch('/wishlist/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            icon.classList.toggle('text-danger');
+            showNotification(data.message, 'success');
+        } else {
+            showNotification(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        showNotification('حدث خطأ في الاتصال', 'error');
+    });
 }
+
+// دالة لتلوين القلوب عند التحميل
+function markWishlistHearts(wishlist) {
+    wishlist.forEach(productId => {
+        const hearts = document.querySelectorAll(`.wishlist-heart[data-product-id="${productId}"]`);
+        hearts.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (icon) icon.classList.add('text-danger');
+        });
+    });
+}
+
+
+// بعد تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    const loggedIn = document.body.dataset.loggedIn === 'true';
+    if (!loggedIn) return;
+
+    fetch('/wishlist')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.wishlist) {
+                markWishlistHearts(data.wishlist);
+            }
+        })
+        .catch(err => console.log('خطأ في جلب المفضلة:', err));
+});
+
 
 // Enhanced search with autocomplete simulation
 function initializeEnhancedSearch() {

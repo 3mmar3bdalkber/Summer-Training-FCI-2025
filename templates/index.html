@@ -31,11 +31,8 @@
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card product-card h-100">
                     <div class="card-img-wrapper">
-                        <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
-                        <button class="btn btn-sm btn-light quick-view-btn" onclick="quickView({{ product.id }})">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        {% if not product.in_stock %}
+                   <img src="{{ url_for('static', filename=product.image_url) }}" class="card-img-top" alt="{{ product.name }}">
+                         {% if not product.in_stock %}
                         <div class="out-of-stock-overlay">
                             <span class="badge bg-danger">نفد المخزون</span>
                         </div>
@@ -44,16 +41,35 @@
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ product.name }}</h5>
                         <p class="card-text text-muted">{{ product.description }}</p>
+                        <span class="badge bg-secondary mb-2">{{ product.category }}</span>
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="h5 text-orange mb-0">{{ product.price }} ج.م</span>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="toggleWishlist({{ product.id }})">
-                                    <i class="fas fa-heart"></i>
-                                </button>
+        <button class="btn btn-outline-secondary btn-sm wishlist-heart" 
+        onclick="toggleWishlist({{ product.id }}, this)" 
+        data-product-id="{{ product.id }}">
+    <i class="fas fa-heart"></i>
+</button>
+
+
+
                             </div>
                             <div class="d-grid">
-                                <a href="{{ url_for('product_detail', product_id=product.id) }}" 
-                                   class="btn btn-outline-orange btn-sm">عرض التفاصيل</a>
+                                {% if product.in_stock %}
+                                {% if current_user.is_authenticated %}
+                                <button class="btn btn-orange btn-sm" onclick="addToCart({{ product.id }})">
+                                    <i class="fas fa-shopping-cart me-2"></i>أضف للسلة
+                                </button>
+                                {% else %}
+                                <a href="{{ url_for('login') }}" class="btn btn-orange btn-sm">
+                                    <i class="fas fa-sign-in-alt me-2"></i>سجل الدخول للشراء
+                                </a>
+                                {% endif %}
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-times me-2"></i>غير متوفر
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
