@@ -1,4 +1,4 @@
-<h1 align="center">🛒 Summer-Training-FCI-2025 — Arabic Flask E-Commerce</h1>
+<h1 align="center"> Summer-Training-FCI-2025 — E-Commerce</h1>
 
 <p align="center">
   A clean, modern, Arabic-first e-commerce website built with <strong>Python Flask</strong> for Summer Training (FCI 2025).<br/>
@@ -17,7 +17,6 @@
 
 <p align="center">
   <a href="#-live-demo">Demo</a> •
-  <a href="#-features">Features</a> •
   <a href="#-quickstart">Quickstart</a> •
   <a href="#-roadmap">Roadmap</a> •
   <a href="#-contributors">Contributors</a>
@@ -27,12 +26,12 @@
 
 ## ✨ Highlight Reel
 
-- 🇸🇦 **Arabic-first UX** with RTL layout.
-- 🛍️ **Products & categories**, with search and filters.
-- 🛒 **Cart** (add / update / remove), **orders** flow.
-- 📱 **Responsive** (Bootstrap) — great on mobile/desktop.
-- 🗄️ **SQLite/MySQL** support via config.
-- 🧪 Ready for **extensions** (auth, payments, admin).
+-  **Arabic-first UX** with RTL layout.
+-  **Products & categories**, with search and filters.
+-  **Cart** (add / update / remove), **orders** flow.
+-  **Responsive** (Bootstrap) — great on mobile/desktop.
+-  **SQLite/MySQL** support via config.
+-  Ready for **extensions** (auth, payments, admin).
 
 ---
 
@@ -42,7 +41,7 @@
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 - **Backend:** Python (Flask), Jinja2  
 - **Frontend:** HTML, CSS, Bootstrap, JavaScript  
@@ -51,28 +50,30 @@
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
+```bash
 Summer-Training-FCI-2025/
-├─ app.py # Flask app entry
-├─ models.py # ORM/models (SQLAlchemy or raw)
-├─ requirements.txt # Python deps
-├─ .env.example # Sample environment variables
-├─ templates/ # Jinja templates
+├─ app.py
+├─ models.py
+├─ requirements.txt
+├─ .env.example 
+├─ templates/
 │ ├─ base.html
 │ ├─ index.html
 │ ├─ product_detail.html
 │ └─ cart.html
-├─ static/ # CSS, JS, images for the site
+├─ static/ 
 │ ├─ css/
 │ ├─ js/
-│ └─ images/
-├─ assets/ # README media (demo.gif)
+│ └─ uploads/
+├─ assets/
+│ ├─ demo.gif
 └─ README.md
-
+```
 ---
 
-## ⚙️ Quickstart
+## Quickstart
 
 ```bash
 # 1) Clone
@@ -99,7 +100,7 @@ flask run
 ```
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 Authentication (signup/login)
 
 Admin dashboard (CRUD products, orders)
@@ -108,29 +109,26 @@ Payments (Stripe/PayPal)
 
 Inventory management
 
-Arabic ↔ English toggle (i18n)
-
 ---
 
 ## 👥 Contributors
-Ammar Abdalkber — Full Stack & Docs
 
-Ahmed Rabee — front End
+FCI Team ( **Mesh Sam3ak men El DP**)
 
-Ahmed Khalifa — Data Base
+**Ammar Abdalkber** — Full Stack & Docs
 
-Taha Sabry — Testing
+**Ahmed Rabee** — front End
 
-Ahmed Khulf — Ai Effectors
+**Ahmed Khalifa** — Data Base
 
-Hazem Ali — DB & Frontend
+**Taha Sabry** — Testing
+
+**Ahmed Khulf** — Ai Effectors
+
+**Hazem Ali** — DB & Frontend
 
 ---
 
 ## 📄 License
-MIT © 2025 — Summer Training FCI Team
-Feel free to use and modify for educational purposes.
-
-## Acknowledgements
-Flask, Bootstrap, Jinja2, and the open-source community.
+MIT © 2025 — Summer Training FCI Team ( **Mesh Sam3ak men El DP**)
 Summer Training — Faculty of Computers & Information (2025).
