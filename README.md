@@ -17,14 +17,14 @@
 
 <p align="center">
   <a href="#-live-demo">Demo</a> •
-  <a href="#-quickstart">Quickstart</a> •
-  <a href="#-roadmap">Roadmap</a> •
+  <a href="#quickstart">Quickstart</a> •
+  <a href="#roadmap">Roadmap</a> •
   <a href="#-contributors">Contributors</a>
 </p>
 
 ---
 
-## ✨ Highlight Reel
+##  Highlight Reel
 
 -  **Arabic-first UX** with RTL layout.
 -  **Products & categories**, with search and filters.
@@ -113,7 +113,7 @@ Inventory management
 
 ## 👥 Contributors
 
-FCI Team ( **Mesh Sam3ak men El DP**)
+**Team Name** : **Mesh Sam3ak men El DP**
 
 **Ammar Abdalkber** — Full Stack & Docs
 
@@ -131,4 +131,5 @@ FCI Team ( **Mesh Sam3ak men El DP**)
 
 ## 📄 License
 MIT © 2025 — Summer Training FCI Team ( **Mesh Sam3ak men El DP**)
+
 Summer Training — Faculty of Computers & Information (2025).
