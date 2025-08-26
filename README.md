@@ -55,14 +55,22 @@
 ```bash
 Summer-Training-FCI-2025/
 ├─ app.py
-├─ models.py
+├─ routes.py
 ├─ requirements.txt
-├─ .env.example 
+├─ requirements.txt
+├─ .env.example
 ├─ templates/
+│ ├─ about.html
 │ ├─ base.html
+│ ├─ cart.html
+│ ├─ contact.html
 │ ├─ index.html
-│ ├─ product_detail.html
-│ └─ cart.html
+│ ├─ login.html
+│ ├─ products.html
+│ ├─ profile.html
+│ ├─ register.html
+│ ├─ search_results.html
+│ └─ wishlist_page.html
 ├─ static/ 
 │ ├─ css/
 │ ├─ js/
